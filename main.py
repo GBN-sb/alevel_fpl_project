@@ -1,6 +1,11 @@
 # imports
-from mimetypes import suffix_map
-from flask import Flask, render_template, request, flash
+from cProfile import label
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Output, Input
+import dash_daq as daq
+import plotly.express as px
 import pandas as pd
 import requests
 
@@ -837,15 +842,36 @@ def suggestTransfer(df, teamDF, OOP):
     return(transfers)
 
 
-def display():
+def display(OOP, df):
     # GUI
-    # create class app
-    app = Flask(__name__)
-    # create a route for the app
+    app = dash.Dash(__name__)
+    print(df)
+    playersDF = df['Index']
+    values = list(playersDF)
+    player_names = []
+    for i in range(len(values)):
+        player = players.getName(OOP[values[i]])
+        player_names.append(player)
 
-    @app.route("/home")
-    def index():
-        return render_template("index.html")
+    app.layout = html.Div([
+        dcc.Dropdown(
+            id='player-dropdown',
+            options=[
+                {'value': idx for idx in values}
+            ],
+            style={'margin-top': '50px', 'margin-left': '50px'}
+        ),
+        html.Div(id='player-id-output')
+    ])
+
+    @app.callback(
+        Output('player-id-output', 'children'),
+        Input('player-dropdown', 'value')
+    )
+    def update_output(value):
+        return None
+
+    app.run_server(debug=True)
 
 
 def main():
@@ -870,7 +896,7 @@ def main():
     startingXI = [['Ederson Santana de Moraes', 'José Malheiro de Sá'], ['Emerson Aparecido Leite de Souza Junior', 'Ben Mee', 'Dan Burn', 'Ben White', 'Rúben Santos Gato Alves Dias'], [
         'Juan Mata', 'João Filipe Iria Santos Moutinho', 'Bernardo Mota Veiga de Carvalho e Silva', 'Joe White', 'Frederico Rodrigues de Paula Santos'], ['Cristiano Ronaldo dos Santos Aveiro', 'Danny Ings', 'Pierre-Emerick Aubameyang']]
     freeTransfers = 1
-    display()
+    display(OOP, playersDFwithPick)
 
 
 if __name__ == "__main__":
