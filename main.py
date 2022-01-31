@@ -848,17 +848,18 @@ def display(OOP, df):
     print(df)
     playersDF = df['Index']
     values = list(playersDF)
-    player_names = []
+    labels = []
     for i in range(len(values)):
         player = players.getName(OOP[values[i]])
-        player_names.append(player)
+        labels.append(player)
+
+    options = [{'label': labels[i], 'value':values[i]}
+               for i in range(len(labels))]
 
     app.layout = html.Div([
         dcc.Dropdown(
             id='player-dropdown',
-            options=[
-                {'value': idx for idx in values}
-            ],
+            options=options,
             style={'margin-top': '50px', 'margin-left': '50px'}
         ),
         html.Div(id='player-id-output')
