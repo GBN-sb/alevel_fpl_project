@@ -1,11 +1,7 @@
 # imports
-from cProfile import label
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Output, Input
-import dash_daq as daq
-import plotly.express as px
+from re import search
+from tkinter import *
+from turtle import right
 import pandas as pd
 import requests
 
@@ -843,36 +839,111 @@ def suggestTransfer(df, teamDF, OOP):
 
 
 def display(OOP, df):
+    # gets available labels
+    def getLabels(data):
+        playersDF = df['Index']
+        values = list(playersDF)
+        labels = []
+        invalid_players = []
+        XI = ["gk1", "gk2", "def1", "def2", "def3", "def4", "def5",
+              "mid1", "mid2", "mid3", "mid4", "mid5", "fw1", "fw2", "fw3"]
+        for i in range(15):
+            invalid_players.append(gk1.get())
+
+        for p in values:
+            player = players.getName(OOP[values[p]])
+            labels.append(player)
+
+    # update listbox
+    def update(data):
+        # clear list box
+        player_search_list.delete(0, END)
+        # add players
+        player_names = [data[i] for i in range(len(data))]
+        for player in data:
+            player_search_list.insert(END, player)
+
+    # update label with selected item
+    def fillout(event):
+        search_player.delete(0, END)
+        search_player.insert(0, player_search_list.get(ACTIVE))
+
+    # check entry is in list box
+    def check(event):
+        typed = search_player.get()
+        if typed == '':
+            data = labels
+        else:
+            data = []
+            for player in labels:
+                if typed.lower() in player.lower():
+                    data.append(player)
+        update(data)
+
     # GUI
-    app = dash.Dash(__name__)
-    print(df)
-    playersDF = df['Index']
-    values = list(playersDF)
-    labels = []
-    for i in range(len(values)):
-        player = players.getName(OOP[values[i]])
-        labels.append(player)
+    # init
+    root = Tk()
+    root.title('FPL analysis')
+    root.geometry("1000x600")
 
-    options = [{'label': labels[i], 'value':values[i]}
-               for i in range(len(labels))]
+    # label
+    search_label = Label(root, text="Search Player")
+    search_label.place(relx=.5, rely=0.05, anchor=CENTER)
 
-    app.layout = html.Div([
-        dcc.Dropdown(
-            id='player-dropdown',
-            options=options,
-            style={'margin-top': '50px', 'margin-left': '50px'}
-        ),
-        html.Div(id='player-id-output')
-    ])
+    # entry box
+    search_player = Entry(root, width=100)
+    search_player.place(relx=.5, rely=0.1, anchor=CENTER)
 
-    @app.callback(
-        Output('player-id-output', 'children'),
-        Input('player-dropdown', 'value')
-    )
-    def update_output(value):
-        return None
+    # list box
+    player_search_list = Listbox(root, width=50, height=5)
+    player_search_list.place(relx=.5, rely=0.2, anchor=CENTER)
+    labels = getLabels(df)
+    update(labels)
 
-    app.run_server(debug=True)
+    # confirm Button
+    enter_button = Button(root)
+
+    # print selected item
+    player_search_list.bind("<<ListboxSelect>>", fillout)
+    search_player.bind("<KeyRelease>", check)
+
+    # starting XI labels
+    # GKs
+    gk1 = Label(root, text="GK", borderwidth=1, relief="solid")
+    gk1.place(bordermode=INSIDE, x=462, y=200, anchor=CENTER)
+    gk2 = Label(root, text="GK", borderwidth=1, relief="solid")
+    gk2.place(bordermode=INSIDE, x=537, y=200, anchor=CENTER)
+    # Defenders
+    def1 = Label(root, text="Def", borderwidth=1, relief="solid")
+    def1.place(bordermode=INSIDE, x=500, y=250, anchor=CENTER)
+    def2 = Label(root, text="Def", borderwidth=1, relief="solid")
+    def2.place(bordermode=INSIDE, x=575, y=250, anchor=CENTER)
+    def3 = Label(root, text="Def", borderwidth=1, relief="solid")
+    def3.place(bordermode=INSIDE, x=650, y=250, anchor=CENTER)
+    def4 = Label(root, text="Def", borderwidth=1, relief="solid")
+    def4.place(bordermode=INSIDE, x=425, y=250, anchor=CENTER)
+    def5 = Label(root, text="Def", borderwidth=1, relief="solid")
+    def5.place(bordermode=INSIDE, x=350, y=250, anchor=CENTER)
+    # Midfielders
+    mid1 = Label(root, text="Mid", borderwidth=1, relief="solid")
+    mid1.place(bordermode=INSIDE, x=500, y=300, anchor=CENTER)
+    mid2 = Label(root, text="Mid", borderwidth=1, relief="solid")
+    mid2.place(bordermode=INSIDE, x=575, y=300, anchor=CENTER)
+    mid3 = Label(root, text="Mid", borderwidth=1, relief="solid")
+    mid3.place(bordermode=INSIDE, x=650, y=300, anchor=CENTER)
+    mid4 = Label(root, text="Mid", borderwidth=1, relief="solid")
+    mid4.place(bordermode=INSIDE, x=425, y=300, anchor=CENTER)
+    mid5 = Label(root, text="Mid", borderwidth=1, relief="solid")
+    mid5.place(bordermode=INSIDE, x=350, y=300, anchor=CENTER)
+    # Forwards
+    fw1 = Label(root, text="FW", borderwidth=1, relief="solid")
+    fw1.place(bordermode=INSIDE, x=500, y=350, anchor=CENTER)
+    fw2 = Label(root, text="FW", borderwidth=1, relief="solid")
+    fw2.place(bordermode=INSIDE, x=575, y=350, anchor=CENTER)
+    fw3 = Label(root, text="FW", borderwidth=1, relief="solid")
+    fw3.place(bordermode=INSIDE, x=425, y=350, anchor=CENTER)
+
+    root.mainloop()
 
 
 def main():
