@@ -1,7 +1,8 @@
 # imports
+from math import factorial
 from re import search
 from tkinter import *
-from turtle import right
+from turtle import position, right
 import pandas as pd
 import requests
 
@@ -260,6 +261,9 @@ class players:
 
     def getRankPick(self):
         return(self.rank_pick)
+
+    def getIndex(self):
+        return(self.index)
 
 
 def getTeamData():
@@ -676,83 +680,6 @@ def getStartingXI(playersDF, OOP):
         df['original_index'] = original_index
         return(df)
 
-    def checkIfValid(x, df):
-        df = df['full_name']
-        names = []
-        for i in range(len(df)):
-            name = str(df.iloc[i])
-            names.append(name)
-        valid = linearSearch(names, x)
-        return(valid)
-
-    def getGK(df, FORMATION, TITLES):
-        numberOfPlayers = FORMATION[0]
-        goalkeepers = []
-        for i in range(numberOfPlayers):
-            valid = False
-            while True:
-                name = input("Enter %s goalkeeper: " % TITLES[i])
-                if name in goalkeepers:
-                    valid = False
-                else:
-                    if checkIfValid(name, df) != False:
-                        goalkeepers.append(name)
-                        valid = True
-                if valid == True:
-                    break
-        return(goalkeepers)
-
-    def getDef(df, FORMATION, TITLES):
-        numberOfPlayers = FORMATION[1]
-        defenders = []
-        for i in range(numberOfPlayers):
-            valid = False
-            while True:
-                name = input('Enter %s defender: ' % TITLES[i])
-                if name in defenders:
-                    valid = False
-                else:
-                    if checkIfValid(name, df) != False:
-                        defenders.append(name)
-                        valid = True
-                if valid == True:
-                    break
-        return(defenders)
-
-    def getMid(df, FORMATION, TITLES):
-        numberOfPlayers = FORMATION[2]
-        midfielders = []
-        for i in range(numberOfPlayers):
-            valid = False
-            while True:
-                name = input('Enter %s midfielder: ' % TITLES[i])
-                if name in midfielders:
-                    valid = False
-                else:
-                    if checkIfValid(name, df) != False:
-                        midfielders.append(name)
-                        valid = True
-                if valid == True:
-                    break
-        return(midfielders)
-
-    def getFWd(df, FORMATION, TITLES):
-        numberOfPlayers = FORMATION[3]
-        forwards = []
-        for i in range(numberOfPlayers):
-            valid = False
-            while True:
-                name = input('Enter %s forward: ' % TITLES[i])
-                if name in forwards:
-                    valid = False
-                else:
-                    if checkIfValid(name, df) != False:
-                        forwards.append(name)
-                        valid = True
-                if valid == True:
-                    break
-        return(forwards)
-
     def getStats(startingXI, OOP, df):
         indexes = []
         for i in range(len(startingXI)):
@@ -780,18 +707,6 @@ def getStartingXI(playersDF, OOP):
     name_position = list(playersDF['position'])
     pick_rank = list(playersDF['pick_rank'])
     df = getDataFrame(names_Arr, name_position, pick_rank)
-    gkDF = df[df['position'] == 'Goalkeeper'].copy()
-    defDF = df[df['position'] == 'Defender'].copy()
-    midDF = df[df['position'] == 'Midfielder'].copy()
-    fwdDF = df[df['position'] == 'Forward'].copy()
-    startingXI = []
-    FORMATION = [2, 5, 5, 3]
-    TITLES = ['first', 'second', 'third', 'fourth', 'fifth']
-    # goalkeepers = getGK(gkDF, FORMATION, TITLES)
-    # defenders = getDef(defDF, FORMATION, TITLES)
-    # midfielders = getMid(midDF, FORMATION, TITLES)
-    # forwards = getFWd(fwdDF, FORMATION, TITLES)
-    # startingXI = np.concatenate((goalkeepers, defenders, midfielders, forwards), axis=0)
     startingXI = [['Robert Sánchez', 'Aaron Ramsdale'], ['Trent Alexander-Arnold', 'João Pedro Cavaco Cancelo', 'Marc Guéhi', 'Reece James', 'Tino Livramento'], [
         'Mohamed Salah', 'Diogo Jota', 'Bernardo Mota Veiga de Carvalho e Silva', 'Lucas Rodrigues Moura da Silva', 'Conor Gallagher'], ['Neal Maupay', 'Emmanuel Dennis', 'Christian Benteke']]
     return(getStats(startingXI, OOP, df))
@@ -809,7 +724,7 @@ def suggestTransfer(df, teamDF, OOP):
     def getTransfers(player, players_in_team, df, OOP):
         sell_price = players.getPrice(OOP[player])
         sell_pos = players.getPosition(OOP[player])
-        sell_pick = players.getPick(OOP[player])
+        sell_pick = players.getRankPick(OOP[player])
         sell_name = players.getName(OOP[player])
         df = df[df['position'] == sell_pos].sort_values(
             by='pick', ascending=False).reset_index()
@@ -820,11 +735,43 @@ def suggestTransfer(df, teamDF, OOP):
             price = players.getPrice(OOP[x])
             pick = players.getRankPick(OOP[x])
             name = players.getName(OOP[x])
-            if not_valid == False and price <= sell_price and pick > sell_pick:
+            if not_valid == False and price <= sell_price and pick < sell_pick:
                 transfer = (sell_name + " -> " + name)
                 return(transfer)
         return("None")
 
+    def multiTransfers(sell_player_one, sell_player_two, players_in_team, df, OOP):
+        p1_sell_price = players.getPrice(OOP[sell_player_one])
+        p1_sell_position = players.getPosition(OOP[sell_player_one])
+        p1_sell_pick = players.getRankPick(OOP[sell_player_one])
+        p1_sell_name = players.getName(OOP[sell_player_one])
+        p2_sell_price = players.getPrice(OOP[sell_player_two])
+        p2_sell_position = players.getPosition(OOP[sell_player_two])
+        p2_sell_pick = players.getRankPick(OOP[sell_player_two])
+        p2_sell_name = players.getName(OOP[sell_player_two])
+        budget = int(p1_sell_price) + int(p2_sell_price)
+        p1_df = df[df['position'] == p1_sell_position].sort_values(
+            by='pick', ascending=False).reset_index()
+        p1_in = df['index']
+        p2_df = df[df['position'] == p2_sell_position].sort_values(
+            by='pick', ascending=False).reset_index()
+        p2_in = df['index']
+        for i in range(len(p1_df)):
+            p1_in_index = p1_in[i]
+            p1_not_valid = linearSearch(players_in_team, p1_in_index)
+            p1_price = players.getPrice(OOP[p1_in_index])
+            p1_pick = players.getRankPick(OOP[p1_in_index])
+            p1_name = players.getName(OOP[p1_in_index])
+            for j in range(len(p2_df)):
+                p2_in_index = p2_in[i]
+                p2_not_valid = linearSearch(players_in_team, p2_in_index)
+                p2_price = players.getPrice(OOP[p2_in_index])
+                p2_pick = players.getRankPick(OOP[p2_in_index])
+                p2_name = players.getName(OOP[p2_in_index])
+                price = p1_price + p2_price
+
+    # number of free transfers
+    free_transfers = 2
     # get 5 worse players
     teamDF = teamDF.sort_values(by='Pick', ascending=False)
     player_out = teamDF.head(5).reset_index()
@@ -832,34 +779,63 @@ def suggestTransfer(df, teamDF, OOP):
     players_in_team = get_players(teamDF)
     # loop through each player finding a transfer
     transfers = []
-    for i in range(len(player_out)):
-        player = player_out.loc[i]['ID']
-        transfers.append(getTransfers(player, players_in_team, df, OOP))
+    if free_transfers == 1:
+        for i in range(len(player_out)):
+            player = player_out.loc[i]['ID']
+            transfers.append(getTransfers(
+                player, players_in_team, df, OOP))
+    else:
+        for i in range(4):
+            sell_player_one = player_out.loc[0]['ID']
+            sell_player_two = player_out.loc[i+1]['ID']
+            transfers.append(multiTransfers(
+                sell_player_one, sell_player_two, players_in_team, df, OOP))
+        for i in range(3):
+            print()
+        for i in range(2):
+            print()
+        print()
     return(transfers)
 
 
 def display(OOP, df):
+    df = df
     # gets available labels
-    def getLabels(data):
+
+    def getLabels(df):
+        invalid_players = []
+        XI = [gk1, gk2, def1, def2, def3, def4, def5,
+              mid1, mid2, mid3, mid4, mid5, fw1, fw2, fw3]
+        for i in range(15):
+            invalid_players.append(XI[i].cget("text"))
+
+        if gk1.cget("text") != "GK" and gk2.cget("text") != "GK":
+            df = df[df["position"].str.contains("Goalkeeper") == False]
+        if def1.cget("text") != "Def" and def2.cget("text") != "Def" and def3.cget("text") != "Def" and def4.cget("text") != "Def" and def5.cget("text") != "Def":
+            df = df[df["position"].str.contains("Defender") == False]
+        if mid1.cget("text") != "Mid" and mid2.cget("text") != "Mid" and mid3.cget("text") != "Mid" and mid4.cget("text") != "Mid" and mid5.cget("text") != "Mid":
+            df = df[df["position"].str.contains("Midfielder") == False]
+        if fw1.cget("text") != "FW" and fw2.cget("text") != "FW" and fw3.cget("text") != "FW":
+            df = df[df["position"].str.contains("Forward") == False]
+
         playersDF = df['Index']
         values = list(playersDF)
         labels = []
-        invalid_players = []
-        XI = ["gk1", "gk2", "def1", "def2", "def3", "def4", "def5",
-              "mid1", "mid2", "mid3", "mid4", "mid5", "fw1", "fw2", "fw3"]
-        for i in range(15):
-            invalid_players.append(gk1.get())
-
-        for p in values:
-            player = players.getName(OOP[values[p]])
-            labels.append(player)
+        for p in range(len(values)-1):
+            player = str(str(players.getName(
+                OOP[values[p]])) + " " + str(players.getIndex(OOP[values[p]])))
+            if player in invalid_players:
+                None
+            else:
+                labels.append(player)
+        return labels
 
     # update listbox
+
     def update(data):
         # clear list box
         player_search_list.delete(0, END)
         # add players
-        player_names = [data[i] for i in range(len(data))]
         for player in data:
             player_search_list.insert(END, player)
 
@@ -870,6 +846,7 @@ def display(OOP, df):
 
     # check entry is in list box
     def check(event):
+        labels = getLabels(df)
         typed = search_player.get()
         if typed == '':
             data = labels
@@ -880,6 +857,52 @@ def display(OOP, df):
                     data.append(player)
         update(data)
 
+    # submit player choice
+    def submit():
+        # check valid player
+        player = search_player.get()
+        labels = getLabels(df)
+        if player in labels:
+            player_id = ''.join(filter(lambda i: i.isdigit(), player))
+            player_id = int(float(player_id))
+            player_position = players.getPosition(OOP[player_id])
+            if player_position == "Goalkeeper":
+                if gk1.cget("text") == "GK":
+                    gk1.config(text=player)
+                else:
+                    gk2.config(text=player)
+            elif player_position == "Defender":
+                if def1.cget("text") == "Def":
+                    def1.config(text=player)
+                elif def2.cget("text") == "Def":
+                    def2.config(text=player)
+                elif def3.cget("text") == "Def":
+                    def3.config(text=player)
+                elif def4.cget("text") == "Def":
+                    def4.config(text=player)
+                else:
+                    def5.config(text=player)
+            elif player_position == "Midfielder":
+                if mid1.cget("text") == "Mid":
+                    mid1.config(text=player)
+                elif mid2.cget("text") == "Mid":
+                    mid2.config(text=player)
+                elif mid3.cget("text") == "Mid":
+                    mid3.config(text=player)
+                elif mid4.cget("text") == "Mid":
+                    mid4.config(text=player)
+                else:
+                    mid5.config(text=player)
+            else:
+                if fw1.cget("text") == "FW":
+                    fw1.config(text=player)
+                elif fw2.cget("text") == "FW":
+                    fw2.config(text=player)
+                else:
+                    fw3.config(text=player)
+            labels = getLabels(df)
+            update(labels)
+
     # GUI
     # init
     root = Tk()
@@ -889,6 +912,57 @@ def display(OOP, df):
     # label
     search_label = Label(root, text="Search Player")
     search_label.place(relx=.5, rely=0.05, anchor=CENTER)
+
+    # starting XI labels
+    # GKs
+    gk1 = Label(root, text="GK", borderwidth=1,
+                relief="solid", width=8, height=1)
+    gk1.place(bordermode=INSIDE, x=462, y=200, anchor=CENTER)
+    gk2 = Label(root, text="GK", borderwidth=1,
+                relief="solid", width=8, height=1)
+    gk2.place(bordermode=INSIDE, x=537, y=200, anchor=CENTER)
+    # Defenders
+    def1 = Label(root, text="Def", borderwidth=1,
+                 relief="solid", width=8, height=1)
+    def1.place(bordermode=INSIDE, x=500, y=250, anchor=CENTER)
+    def2 = Label(root, text="Def", borderwidth=1,
+                 relief="solid", width=8, height=1)
+    def2.place(bordermode=INSIDE, x=575, y=250, anchor=CENTER)
+    def3 = Label(root, text="Def", borderwidth=1,
+                 relief="solid", width=8, height=1)
+    def3.place(bordermode=INSIDE, x=650, y=250, anchor=CENTER)
+    def4 = Label(root, text="Def", borderwidth=1,
+                 relief="solid", width=8, height=1)
+    def4.place(bordermode=INSIDE, x=425, y=250, anchor=CENTER)
+    def5 = Label(root, text="Def", borderwidth=1,
+                 relief="solid", width=8, height=1)
+    def5.place(bordermode=INSIDE, x=350, y=250, anchor=CENTER)
+    # Midfielders
+    mid1 = Label(root, text="Mid", borderwidth=1,
+                 relief="solid", width=8, height=1)
+    mid1.place(bordermode=INSIDE, x=500, y=300, anchor=CENTER)
+    mid2 = Label(root, text="Mid", borderwidth=1,
+                 relief="solid", width=8, height=1)
+    mid2.place(bordermode=INSIDE, x=575, y=300, anchor=CENTER)
+    mid3 = Label(root, text="Mid", borderwidth=1,
+                 relief="solid", width=8, height=1)
+    mid3.place(bordermode=INSIDE, x=650, y=300, anchor=CENTER)
+    mid4 = Label(root, text="Mid", borderwidth=1,
+                 relief="solid", width=8, height=1)
+    mid4.place(bordermode=INSIDE, x=425, y=300, anchor=CENTER)
+    mid5 = Label(root, text="Mid", borderwidth=1,
+                 relief="solid", width=8, height=1)
+    mid5.place(bordermode=INSIDE, x=350, y=300, anchor=CENTER)
+    # Forwards
+    fw1 = Label(root, text="FW", borderwidth=1,
+                relief="solid", width=8, height=1)
+    fw1.place(bordermode=INSIDE, x=500, y=350, anchor=CENTER)
+    fw2 = Label(root, text="FW", borderwidth=1,
+                relief="solid", width=8, height=1)
+    fw2.place(bordermode=INSIDE, x=575, y=350, anchor=CENTER)
+    fw3 = Label(root, text="FW", borderwidth=1,
+                relief="solid", width=8, height=1)
+    fw3.place(bordermode=INSIDE, x=425, y=350, anchor=CENTER)
 
     # entry box
     search_player = Entry(root, width=100)
@@ -901,47 +975,12 @@ def display(OOP, df):
     update(labels)
 
     # confirm Button
-    enter_button = Button(root)
+    enter_button = Button(root, width=6, text="Confirm", command=submit)
+    enter_button.place(relx=.78, rely=.15, anchor=CENTER)
 
     # print selected item
     player_search_list.bind("<<ListboxSelect>>", fillout)
     search_player.bind("<KeyRelease>", check)
-
-    # starting XI labels
-    # GKs
-    gk1 = Label(root, text="GK", borderwidth=1, relief="solid")
-    gk1.place(bordermode=INSIDE, x=462, y=200, anchor=CENTER)
-    gk2 = Label(root, text="GK", borderwidth=1, relief="solid")
-    gk2.place(bordermode=INSIDE, x=537, y=200, anchor=CENTER)
-    # Defenders
-    def1 = Label(root, text="Def", borderwidth=1, relief="solid")
-    def1.place(bordermode=INSIDE, x=500, y=250, anchor=CENTER)
-    def2 = Label(root, text="Def", borderwidth=1, relief="solid")
-    def2.place(bordermode=INSIDE, x=575, y=250, anchor=CENTER)
-    def3 = Label(root, text="Def", borderwidth=1, relief="solid")
-    def3.place(bordermode=INSIDE, x=650, y=250, anchor=CENTER)
-    def4 = Label(root, text="Def", borderwidth=1, relief="solid")
-    def4.place(bordermode=INSIDE, x=425, y=250, anchor=CENTER)
-    def5 = Label(root, text="Def", borderwidth=1, relief="solid")
-    def5.place(bordermode=INSIDE, x=350, y=250, anchor=CENTER)
-    # Midfielders
-    mid1 = Label(root, text="Mid", borderwidth=1, relief="solid")
-    mid1.place(bordermode=INSIDE, x=500, y=300, anchor=CENTER)
-    mid2 = Label(root, text="Mid", borderwidth=1, relief="solid")
-    mid2.place(bordermode=INSIDE, x=575, y=300, anchor=CENTER)
-    mid3 = Label(root, text="Mid", borderwidth=1, relief="solid")
-    mid3.place(bordermode=INSIDE, x=650, y=300, anchor=CENTER)
-    mid4 = Label(root, text="Mid", borderwidth=1, relief="solid")
-    mid4.place(bordermode=INSIDE, x=425, y=300, anchor=CENTER)
-    mid5 = Label(root, text="Mid", borderwidth=1, relief="solid")
-    mid5.place(bordermode=INSIDE, x=350, y=300, anchor=CENTER)
-    # Forwards
-    fw1 = Label(root, text="FW", borderwidth=1, relief="solid")
-    fw1.place(bordermode=INSIDE, x=500, y=350, anchor=CENTER)
-    fw2 = Label(root, text="FW", borderwidth=1, relief="solid")
-    fw2.place(bordermode=INSIDE, x=575, y=350, anchor=CENTER)
-    fw3 = Label(root, text="FW", borderwidth=1, relief="solid")
-    fw3.place(bordermode=INSIDE, x=425, y=350, anchor=CENTER)
 
     root.mainloop()
 
@@ -965,10 +1004,7 @@ def main():
 
     print(suggest_transfers)
 
-    startingXI = [['Ederson Santana de Moraes', 'José Malheiro de Sá'], ['Emerson Aparecido Leite de Souza Junior', 'Ben Mee', 'Dan Burn', 'Ben White', 'Rúben Santos Gato Alves Dias'], [
-        'Juan Mata', 'João Filipe Iria Santos Moutinho', 'Bernardo Mota Veiga de Carvalho e Silva', 'Joe White', 'Frederico Rodrigues de Paula Santos'], ['Cristiano Ronaldo dos Santos Aveiro', 'Danny Ings', 'Pierre-Emerick Aubameyang']]
-    freeTransfers = 1
-    display(OOP, playersDFwithPick)
+    #display(OOP, playersDFwithPick)
 
 
 if __name__ == "__main__":
