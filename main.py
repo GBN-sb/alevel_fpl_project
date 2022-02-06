@@ -568,6 +568,7 @@ def assignPlayerPick(teamsDF, fixturesDF, playersDF):
                         gw2.append(df.iloc[i]['team_a'])
                     elif df.iloc[i]['event'] == current_gw + 2:
                         gw3.append(df.iloc[i]['team_h'])
+                        gw3.append(df.iloc[i]['team_a'])
                     gw = df.iloc[i]['event']
             return gw1, gw2, gw3
 
@@ -642,7 +643,7 @@ def assignPlayerPick(teamsDF, fixturesDF, playersDF):
     dataFrames = [gkDF, defDF, midDF, fwdDF]
     # merge all frames
     playersDFwithPick = pd.concat(dataFrames)
-    return(gkDF, defDF, midDF, fwdDF, playersDFwithPick)
+    return(playersDFwithPick)
 
 
 def fixtures(teamsDF):
@@ -721,11 +722,11 @@ def suggestTransfer(df, teamDF, OOP):
             player_list.append(player)
         return(player_list)
 
-    def getTransfers(player, players_in_team, df, OOP):
-        sell_price = players.getPrice(OOP[player])
-        sell_pos = players.getPosition(OOP[player])
-        sell_pick = players.getRankPick(OOP[player])
-        sell_name = players.getName(OOP[player])
+    def getTransfers(player_index, players_in_team, df, OOP):
+        sell_price = players.getPrice(OOP[player_index])
+        sell_pos = players.getPosition(OOP[player_index])
+        sell_pick = players.getRankPick(OOP[player_index])
+        sell_name = players.getName(OOP[player_index])
         df = df[df['position'] == sell_pos].sort_values(
             by='pick', ascending=False).reset_index()
         player_in = df['index']
@@ -749,26 +750,49 @@ def suggestTransfer(df, teamDF, OOP):
         p2_sell_position = players.getPosition(OOP[sell_player_two])
         p2_sell_pick = players.getRankPick(OOP[sell_player_two])
         p2_sell_name = players.getName(OOP[sell_player_two])
+        sell_total_pick = p1_sell_pick + p2_sell_pick
         budget = int(p1_sell_price) + int(p2_sell_price)
         p1_df = df[df['position'] == p1_sell_position].sort_values(
             by='pick', ascending=False).reset_index()
-        p1_in = df['index']
+        p1_in = df['Index']
         p2_df = df[df['position'] == p2_sell_position].sort_values(
             by='pick', ascending=False).reset_index()
-        p2_in = df['index']
-        for i in range(len(p1_df)):
-            p1_in_index = p1_in[i]
-            p1_not_valid = linearSearch(players_in_team, p1_in_index)
-            p1_price = players.getPrice(OOP[p1_in_index])
-            p1_pick = players.getRankPick(OOP[p1_in_index])
-            p1_name = players.getName(OOP[p1_in_index])
-            for j in range(len(p2_df)):
-                p2_in_index = p2_in[i]
-                p2_not_valid = linearSearch(players_in_team, p2_in_index)
-                p2_price = players.getPrice(OOP[p2_in_index])
-                p2_pick = players.getRankPick(OOP[p2_in_index])
-                p2_name = players.getName(OOP[p2_in_index])
-                price = p1_price + p2_price
+        p2_in = df['Index']
+        if p1_sell_position == p2_sell_position:
+            for i in range(len(p1_df)):
+                p1_in_index = p1_in[i]
+                p1_not_valid = linearSearch(players_in_team, p1_in_index)
+                p1_price = players.getPrice(OOP[p1_in_index])
+                p1_pick = players.getRankPick(OOP[p1_in_index])
+                p1_name = players.getName(OOP[p1_in_index])
+                for j in range(2):
+                    j += 1
+                    p2_in_index = p2_in[j]
+                    p2_not_valid = linearSearch(players_in_team, p2_in_index)
+                    p2_price = players.getPrice(OOP[p2_in_index])
+                    p2_pick = players.getRankPick(OOP[p2_in_index])
+                    p2_name = players.getName(OOP[p2_in_index])
+                    total_pick = p1_pick + p2_pick
+                    price = p1_price + p2_price
+                    if (price <= budget) and (p2_not_valid == False) and (p1_not_valid == False) and (total_pick < sell_total_pick):
+                        transfer = ('(%s) & *(%s) -> (%s) & (%s)' %
+                                    (p1_sell_name, p2_sell_name, p1_name, p2_name))
+                        return(transfer)
+            return("None")
+        else:
+            for i in range(len(p1_df)):
+                p1_in_index = p1_in[i]
+                p1_not_valid = linearSearch(players_in_team, p1_in_index)
+                p1_price = players.getPrice(OOP[p1_in_index])
+                p1_pick = players.getRankPick(OOP[p1_in_index])
+                p1_name = players.getName(OOP[p1_in_index])
+                for j in range(len(p2_df)):
+                    p2_in_index = p2_in[i]
+                    p2_not_valid = linearSearch(players_in_team, p2_in_index)
+                    p2_price = players.getPrice(OOP[p2_in_index])
+                    p2_pick = players.getRankPick(OOP[p2_in_index])
+                    p2_name = players.getName(OOP[p2_in_index])
+                    price = p1_price + p2_price
 
     # number of free transfers
     free_transfers = 2
@@ -986,10 +1010,13 @@ def display(OOP, df):
 
 
 def main():
+    # player Dataframe
     playerDF = getPlayerData()
+    # team Dataframe
     teamsDF = getTeamData()
+    # fixture Dataframe
     fixtureDF = fixtures(teamsDF)
-    gkDF, defDF, midDF, fwdDF, playersDFwithPick = assignPlayerPick(
+    playersDFwithPick = assignPlayerPick(
         teamsDF, fixtureDF, playerDF)
 
     # testing ___________________________________________________________________________________________
