@@ -1,8 +1,6 @@
 # imports
-from math import factorial
 from re import search
 from tkinter import *
-from turtle import position, right
 import pandas as pd
 import requests
 
@@ -1032,7 +1030,6 @@ def main():
     print(suggest_transfers)
 
     #display(OOP, playersDFwithPick)
-
 
 if __name__ == "__main__":
     main()
