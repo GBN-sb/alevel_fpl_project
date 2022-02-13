@@ -3,6 +3,7 @@ from tkinter import *
 import FPLCompleteData as fpl
 import cProfile
 import pstats
+import FPLtransfers as t
 
 
 def display():
@@ -60,18 +61,19 @@ def display():
         update(data)
 
     # submit player choice
+
     def submit():
         # check valid player
         player = search_player.get()
         labels = getLabels(df)
-        players = fpl.getPlayerData()
+
         if player in labels:
             # for name, position in zip(players['name'], players['position']):
             #     if name == player:
             #         player_position = position
             #         break
-            player_position = players.loc[players['name']
-                                          == player, 'position'].item()
+            player_position = df.loc[df['name']
+                                     == player, 'position'].item()
             if player_position == "Goalkeeper":
                 if gk1.cget("text") == "GK":
                     gk1.config(text=player)
@@ -125,6 +127,7 @@ def display():
         fw1.config(text="FW")
         fw2.config(text="FW")
         fw3.config(text="FW")
+        transfer_list_box
 
     def submitTeam():
         squad = []  # empty squad
@@ -150,13 +153,15 @@ def display():
         result = set(squad).intersection(default)
         isEmpty = (result == set())
         if isEmpty:
-            print("Set is empty")
+            transfers = t.suggestTransfer(squad, 2)
+            for i in range(len(transfers)):
+                transfer_list_box.insert(END, transfers[i])
 
     # GUI
     # init
     root = Tk()
     root.title('FPL analysis')
-    root.geometry("1000x600")
+    root.geometry("1000x800")
 
     # label
     search_label = Label(root, text="Search Player")
@@ -166,62 +171,66 @@ def display():
     # GKs
     gk1 = Label(root, text="GK", borderwidth=1,
                 relief="solid", width=8, height=1)
-    gk1.place(bordermode=INSIDE, x=462, y=200, anchor=CENTER)
+    gk1.place(bordermode=INSIDE, relx=0.45, rely=0.3, anchor=CENTER)
     gk2 = Label(root, text="GK", borderwidth=1,
                 relief="solid", width=8, height=1)
-    gk2.place(bordermode=INSIDE, x=537, y=200, anchor=CENTER)
+    gk2.place(bordermode=INSIDE, relx=0.55, rely=0.3, anchor=CENTER)
     # Defenders
     def1 = Label(root, text="Def", borderwidth=1,
                  relief="solid", width=8, height=1)
-    def1.place(bordermode=INSIDE, x=500, y=250, anchor=CENTER)
+    def1.place(bordermode=INSIDE, relx=0.50, rely=0.4, anchor=CENTER)
     def2 = Label(root, text="Def", borderwidth=1,
                  relief="solid", width=8, height=1)
-    def2.place(bordermode=INSIDE, x=575, y=250, anchor=CENTER)
+    def2.place(bordermode=INSIDE, relx=0.60, rely=0.4, anchor=CENTER)
     def3 = Label(root, text="Def", borderwidth=1,
                  relief="solid", width=8, height=1)
-    def3.place(bordermode=INSIDE, x=650, y=250, anchor=CENTER)
+    def3.place(bordermode=INSIDE, relx=0.70, rely=0.4, anchor=CENTER)
     def4 = Label(root, text="Def", borderwidth=1,
                  relief="solid", width=8, height=1)
-    def4.place(bordermode=INSIDE, x=425, y=250, anchor=CENTER)
+    def4.place(bordermode=INSIDE, relx=0.40, rely=0.4, anchor=CENTER)
     def5 = Label(root, text="Def", borderwidth=1,
                  relief="solid", width=8, height=1)
-    def5.place(bordermode=INSIDE, x=350, y=250, anchor=CENTER)
+    def5.place(bordermode=INSIDE, relx=0.30, rely=0.4, anchor=CENTER)
     # Midfielders
     mid1 = Label(root, text="Mid", borderwidth=1,
                  relief="solid", width=8, height=1)
-    mid1.place(bordermode=INSIDE, x=500, y=300, anchor=CENTER)
+    mid1.place(bordermode=INSIDE, relx=0.50, rely=0.5, anchor=CENTER)
     mid2 = Label(root, text="Mid", borderwidth=1,
                  relief="solid", width=8, height=1)
-    mid2.place(bordermode=INSIDE, x=575, y=300, anchor=CENTER)
+    mid2.place(bordermode=INSIDE, relx=0.60, rely=0.5, anchor=CENTER)
     mid3 = Label(root, text="Mid", borderwidth=1,
                  relief="solid", width=8, height=1)
-    mid3.place(bordermode=INSIDE, x=650, y=300, anchor=CENTER)
+    mid3.place(bordermode=INSIDE, relx=0.70, rely=0.5, anchor=CENTER)
     mid4 = Label(root, text="Mid", borderwidth=1,
                  relief="solid", width=8, height=1)
-    mid4.place(bordermode=INSIDE, x=425, y=300, anchor=CENTER)
+    mid4.place(bordermode=INSIDE, relx=0.40, rely=0.5, anchor=CENTER)
     mid5 = Label(root, text="Mid", borderwidth=1,
                  relief="solid", width=8, height=1)
-    mid5.place(bordermode=INSIDE, x=350, y=300, anchor=CENTER)
+    mid5.place(bordermode=INSIDE, relx=0.30, rely=0.5, anchor=CENTER)
     # Forwards
     fw1 = Label(root, text="FW", borderwidth=1,
                 relief="solid", width=8, height=1)
-    fw1.place(bordermode=INSIDE, x=500, y=350, anchor=CENTER)
+    fw1.place(bordermode=INSIDE, relx=0.50, rely=0.6, anchor=CENTER)
     fw2 = Label(root, text="FW", borderwidth=1,
                 relief="solid", width=8, height=1)
-    fw2.place(bordermode=INSIDE, x=575, y=350, anchor=CENTER)
+    fw2.place(bordermode=INSIDE, relx=0.60, rely=0.6, anchor=CENTER)
     fw3 = Label(root, text="FW", borderwidth=1,
                 relief="solid", width=8, height=1)
-    fw3.place(bordermode=INSIDE, x=425, y=350, anchor=CENTER)
+    fw3.place(bordermode=INSIDE, relx=0.40, rely=0.6, anchor=CENTER)
 
     # entry box
     search_player = Entry(root, width=100)
-    search_player.place(relx=.5, rely=0.1, anchor=CENTER)
+    search_player.place(relx=0.5, rely=0.1, anchor=CENTER)
 
     # list box
     player_search_list = Listbox(root, width=50, height=5)
-    player_search_list.place(relx=.5, rely=0.2, anchor=CENTER)
+    player_search_list.place(relx=0.5, rely=0.2, anchor=CENTER)
     labels = getLabels(df)
     update(labels)
+
+    # transfers list box
+    transfer_list_box = Listbox(root, width=100, height=10)
+    transfer_list_box.place(relx=0.5, rely=0.82, anchor=CENTER)
 
     # confirm Button
     enter_button = Button(root, width=6, text="Confirm", command=submit)
