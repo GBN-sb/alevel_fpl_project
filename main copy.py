@@ -1,4 +1,5 @@
 # imports
+from re import search
 from tkinter import *
 import pandas as pd
 import requests
@@ -751,10 +752,10 @@ def suggestTransfer(df, teamDF, OOP):
         budget = int(p1_sell_price) + int(p2_sell_price)
         p1_df = df[df['position'] == p1_sell_position].sort_values(
             by='pick', ascending=False).reset_index()
-        p1_in = p1_df['Index']
+        p1_in = df['Index']
         p2_df = df[df['position'] == p2_sell_position].sort_values(
             by='pick', ascending=False).reset_index()
-        p2_in = p2_df['Index']
+        p2_in = df['Index']
         if p1_sell_position == p2_sell_position:
             for i in range(len(p1_df)):
                 p1_in_index = p1_in[i]
@@ -784,7 +785,7 @@ def suggestTransfer(df, teamDF, OOP):
                 p1_pick = players.getRankPick(OOP[p1_in_index])
                 p1_name = players.getName(OOP[p1_in_index])
                 for j in range(len(p2_df)):
-                    p2_in_index = p2_in[j]
+                    p2_in_index = p2_in[i]
                     p2_not_valid = linearSearch(players_in_team, p2_in_index)
                     p2_price = players.getPrice(OOP[p2_in_index])
                     p2_pick = players.getRankPick(OOP[p2_in_index])
@@ -1025,9 +1026,10 @@ def main():
     startingXIdf = getStartingXI(playersDFwithPick, OOP)
 
     suggest_transfers = suggestTransfer(playersDFwithPick, startingXIdf, OOP)
-    print(suggest_transfers)
-    display(OOP, playersDFwithPick)
 
+    print(suggest_transfers)
+
+    #display(OOP, playersDFwithPick)
 
 if __name__ == "__main__":
     main()
