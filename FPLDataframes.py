@@ -53,6 +53,9 @@ def getPlayerDataFrame():
     # merge first and last names to create full names
     playersDF['name'] = playersDF['first_name'] + \
         ' ' + playersDF['second_name']
+    # remove accents
+    playersDF['name'] = playersDF['name'].str.normalize('NFKD').str.encode(
+        'ascii', errors='ignore').str.decode('utf-8')
     return(playersDF)
 
 

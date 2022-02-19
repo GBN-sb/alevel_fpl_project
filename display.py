@@ -4,6 +4,10 @@ import FPLCompleteData as fpl
 import cProfile
 import pstats
 import FPLtransfers as t
+from tkinter import *
+import tkinter.font as tkFont
+import matplotlib.pyplot as plt
+import plotly.express as px
 
 
 def display():
@@ -110,6 +114,7 @@ def display():
                     fw3.config(text=player)
             labels = getLabels(df)
             update(labels)
+            search_player.delete(0, END)
 
     def clearLabels():
         gk1.config(text="GK")
@@ -127,9 +132,13 @@ def display():
         fw1.config(text="FW")
         fw2.config(text="FW")
         fw3.config(text="FW")
-        transfer_list_box
+        # clear transfer suggestion box
+        transfer_list_box.delete(0, END)
+        # update labels
+        labels = getLabels(df)
+        update(labels)
 
-    def submitTeam():
+    def getSquad():
         squad = []  # empty squad
         # get all default label values
         default = ['GK', 'Def', 'Mid', 'FW']
@@ -149,104 +158,164 @@ def display():
         squad.append(fw1.cget("text"))
         squad.append(fw2.cget("text"))
         squad.append(fw3.cget("text"))
+        return(squad, default)
+
+    def submitTeam():
+        # clear transfer suggestion box
+        transfer_list_box.delete(0, END)
+        squad, default = getSquad()
         # check for alike items in lists
         result = set(squad).intersection(default)
         isEmpty = (result == set())
         if isEmpty:
-            transfers = t.suggestTransfer(squad, 2)
+            transfers = t.suggestTransfer(squad, transfer.get())
             for i in range(len(transfers)):
                 transfer_list_box.insert(END, transfers[i])
+
+    # graph stats
+    def graphData():
+        squad, not_used = getSquad()
+        squad_df = df.loc[df['name'].isin(squad)]
+        team_data = squad_df[['name', selected_stat.get()]]
+        fig = px.bar(team_data, x='name', y=selected_stat.get(),
+                     color='name', title='Stats')
+        fig.show()
 
     # GUI
     # init
     root = Tk()
     root.title('FPL analysis')
+    root.config(bg='#B3D89C')
     root.geometry("1000x800")
 
     # label
-    search_label = Label(root, text="Search Player")
+    search_label = Label(root, text="FPL Transfer Suggester",
+                         fg='#4D7298', bg='#B3D89C', font=("Inter", 25))
     search_label.place(relx=.5, rely=0.05, anchor=CENTER)
 
     # starting XI labels
     # GKs
-    gk1 = Label(root, text="GK", borderwidth=1,
-                relief="solid", width=8, height=1)
+    gk1 = Label(root, text="GK", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                relief="solid", width=8, height=1, anchor=W)
     gk1.place(bordermode=INSIDE, relx=0.45, rely=0.3, anchor=CENTER)
-    gk2 = Label(root, text="GK", borderwidth=1,
-                relief="solid", width=8, height=1)
+    gk2 = Label(root, text="GK", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                relief="solid", width=8, height=1, anchor=W)
     gk2.place(bordermode=INSIDE, relx=0.55, rely=0.3, anchor=CENTER)
     # Defenders
-    def1 = Label(root, text="Def", borderwidth=1,
-                 relief="solid", width=8, height=1)
+    def1 = Label(root, text="Def", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                 relief="solid", width=8, height=1, anchor=W)
     def1.place(bordermode=INSIDE, relx=0.50, rely=0.4, anchor=CENTER)
-    def2 = Label(root, text="Def", borderwidth=1,
-                 relief="solid", width=8, height=1)
+    def2 = Label(root, text="Def", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                 relief="solid", width=8, height=1, anchor=W)
     def2.place(bordermode=INSIDE, relx=0.60, rely=0.4, anchor=CENTER)
-    def3 = Label(root, text="Def", borderwidth=1,
-                 relief="solid", width=8, height=1)
+    def3 = Label(root, text="Def", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                 relief="solid", width=8, height=1, anchor=W)
     def3.place(bordermode=INSIDE, relx=0.70, rely=0.4, anchor=CENTER)
-    def4 = Label(root, text="Def", borderwidth=1,
-                 relief="solid", width=8, height=1)
+    def4 = Label(root, text="Def", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                 relief="solid", width=8, height=1, anchor=W)
     def4.place(bordermode=INSIDE, relx=0.40, rely=0.4, anchor=CENTER)
-    def5 = Label(root, text="Def", borderwidth=1,
-                 relief="solid", width=8, height=1)
+    def5 = Label(root, text="Def", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                 relief="solid", width=8, height=1, anchor=W)
     def5.place(bordermode=INSIDE, relx=0.30, rely=0.4, anchor=CENTER)
     # Midfielders
-    mid1 = Label(root, text="Mid", borderwidth=1,
-                 relief="solid", width=8, height=1)
+    mid1 = Label(root, text="Mid", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                 relief="solid", width=8, height=1, anchor=W)
     mid1.place(bordermode=INSIDE, relx=0.50, rely=0.5, anchor=CENTER)
-    mid2 = Label(root, text="Mid", borderwidth=1,
-                 relief="solid", width=8, height=1)
+    mid2 = Label(root, text="Mid", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                 relief="solid", width=8, height=1, anchor=W)
     mid2.place(bordermode=INSIDE, relx=0.60, rely=0.5, anchor=CENTER)
-    mid3 = Label(root, text="Mid", borderwidth=1,
-                 relief="solid", width=8, height=1)
+    mid3 = Label(root, text="Mid", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                 relief="solid", width=8, height=1, anchor=W)
     mid3.place(bordermode=INSIDE, relx=0.70, rely=0.5, anchor=CENTER)
-    mid4 = Label(root, text="Mid", borderwidth=1,
-                 relief="solid", width=8, height=1)
+    mid4 = Label(root, text="Mid", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                 relief="solid", width=8, height=1, anchor=W)
     mid4.place(bordermode=INSIDE, relx=0.40, rely=0.5, anchor=CENTER)
-    mid5 = Label(root, text="Mid", borderwidth=1,
-                 relief="solid", width=8, height=1)
+    mid5 = Label(root, text="Mid", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                 relief="solid", width=8, height=1, anchor=W)
     mid5.place(bordermode=INSIDE, relx=0.30, rely=0.5, anchor=CENTER)
     # Forwards
-    fw1 = Label(root, text="FW", borderwidth=1,
-                relief="solid", width=8, height=1)
+    fw1 = Label(root, text="FW", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                relief="solid", width=8, height=1, anchor=W)
     fw1.place(bordermode=INSIDE, relx=0.50, rely=0.6, anchor=CENTER)
-    fw2 = Label(root, text="FW", borderwidth=1,
-                relief="solid", width=8, height=1)
+    fw2 = Label(root, text="FW", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                relief="solid", width=8, height=1, anchor=W)
     fw2.place(bordermode=INSIDE, relx=0.60, rely=0.6, anchor=CENTER)
-    fw3 = Label(root, text="FW", borderwidth=1,
-                relief="solid", width=8, height=1)
+    fw3 = Label(root, text="FW", fg='#FFFFFF', bg='#9DC3C2', font=("Inter", 10), borderwidth=1,
+                relief="solid", width=8, height=1, anchor=W)
     fw3.place(bordermode=INSIDE, relx=0.40, rely=0.6, anchor=CENTER)
 
     # entry box
-    search_player = Entry(root, width=100)
+    search_player = Entry(root, width=100, fg='#FFFFFF',
+                          bg='#77A6B6', font=("Inter", 10))
     search_player.place(relx=0.5, rely=0.1, anchor=CENTER)
 
+    # free transfers input
+    transfer = IntVar()
+    transferBox = Checkbutton(
+        root, text='Multi Transfer', font=("Inter", 10), variable=transfer, onvalue=1, offvalue=0, activebackground='#4D7298', selectcolor='#4D7298', fg='#FFFFFF')
+    transferBox.config(bg='#4D7298')
+    transferBox.place(relx=0.8, rely=0.3, anchor=CENTER)
+
     # list box
-    player_search_list = Listbox(root, width=50, height=5)
+    player_search_list = Listbox(
+        root, width=45, height=5, fg='#FFFFFF', bg='#84A6B1', font=("Inter", 10))
     player_search_list.place(relx=0.5, rely=0.2, anchor=CENTER)
     labels = getLabels(df)
     update(labels)
 
     # transfers list box
-    transfer_list_box = Listbox(root, width=100, height=10)
+    transfer_list_box = Listbox(
+        root, width=90, height=10, fg='#FFFFFF', bg='#84A6B1', font=("Inter", 10))
     transfer_list_box.place(relx=0.5, rely=0.82, anchor=CENTER)
 
     # confirm Button
-    enter_button = Button(root, width=6, text="Confirm", command=submit)
-    enter_button.place(relx=.78, rely=.15, anchor=CENTER)
+    enter_button = Button(root, width=6, text="Confirm", fg='#FFFFFF',
+                          bg='#4D7298', font=("Inter", 10), command=submit)
+    enter_button.place(relx=.70, rely=.15, anchor=CENTER)
 
     # clear Button
-    clear_button = Button(root, width=6, text="Clear", command=clearLabels)
-    clear_button.place(relx=.78, rely=.22, anchor=CENTER)
+    clear_button = Button(root, width=6, text="Clear", fg='#FFFFFF',
+                          bg='#4D7298', font=("Inter", 10), command=clearLabels)
+    clear_button.place(relx=.70, rely=.22, anchor=CENTER)
 
     # submit squad Button
-    submit_button = Button(root, width=6, text="Submit", command=submitTeam)
-    submit_button.place(relx=.78, rely=.29, anchor=CENTER)
+    submit_button = Button(root, width=6, text="Submit", fg='#FFFFFF',
+                           bg='#4D7298', font=("Inter", 10), command=submitTeam)
+    submit_button.place(relx=.70, rely=.29, anchor=CENTER)
 
     # print selected item
     player_search_list.bind("<<ListboxSelect>>", fillout)
     search_player.bind("<KeyRelease>", check)
+
+    # graphing
+    # dropdownlist opitions
+    stat_headings = ['minutes', 'goals_scored',
+                     'assists', 'clean_sheets', 'goals_conceded', 'own_goals',
+                     'penalties_saved', 'penalties_missed', 'yellow_cards', 'red_cards',
+                     'saves', 'element_type', 'form', 'dreamteam_count', 'ep_next',
+                     'ep_this', 'in_dreamteam',
+                     'now_cost', 'points_per_game',
+                     'status', 'total_points', 'transfers_in',
+                     'transfers_out',
+                     'value_form', 'value_season', 'bonus', 'bps', 'influence', 'creativity', 'threat',
+                     'ict_index', 'influence_rank', 'creativity_rank',
+                     'threat_rank',
+                     'ict_index_rank']
+    # menu data type
+    selected_stat = StringVar()
+    # intial value
+    selected_stat.set('goals_scored')
+    # create dropdown list
+    heading_select = OptionMenu(root, selected_stat, *stat_headings)
+    heading_select.config(fg='#FFFFFF',
+                          bg='#4D7298', font=("Inter", 10))
+    heading_select["menu"].config(fg='#FFFFFF',
+                                  bg='#4D7298', font=("Inter", 10))
+    heading_select.place(relx=.10, rely=.75, anchor=CENTER)
+    # graph button
+    graph = Button(root, width=10, text="Graph Data", fg='#FFFFFF',
+                   bg='#4D7298', font=("Inter", 10), command=graphData)
+    graph.place(relx=.10, rely=.70, anchor=CENTER)
 
     root.mainloop()
 

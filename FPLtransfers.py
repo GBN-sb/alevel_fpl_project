@@ -96,7 +96,7 @@ def getMultipleTransfers(squad_df, df, invalid_teams, p1_name, p1_position, p1_r
         return('None')
 
 
-def suggestTransfer(squad, transfers):
+def suggestTransfer(squad, notransfers):
     df = data.getPlayerData()
     # get data for the squad
     squad_df = df.loc[df['name'].isin(squad)]
@@ -111,7 +111,7 @@ def suggestTransfer(squad, transfers):
     invalid_teams = invalid_teams[invalid_teams == 3] == True
     invalid_teams = list(invalid_teams.index)
     # check how many transfers are available
-    if transfers == 1:
+    if notransfers == 0:
         for name, position, price, pick, team in zip(players_out_df['name'], players_out_df['position'], players_out_df['now_cost'], players_out_df['pick_rank'], players_out_df['team']):
             pos_df = df[df['position'] == position].sort_values(
                 by='pick_rank', ascending=True)
@@ -126,6 +126,3 @@ def suggestTransfer(squad, transfers):
                 transfers.append(getMultipleTransfers(squad_df, df, invalid_teams, p1_name,
                                  p1_position, p1_rank, p1_team, p2_name, p2_position, p2_rank, p2_team, budget))
     return(transfers)
-
-
-
