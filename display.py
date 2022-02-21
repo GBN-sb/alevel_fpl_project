@@ -1,12 +1,10 @@
 # imports
 from tkinter import *
+
+from matplotlib import backend_managers
 import FPLCompleteData as fpl
-import cProfile
-import pstats
 import FPLtransfers as t
 from tkinter import *
-import tkinter.font as tkFont
-import matplotlib.pyplot as plt
 import plotly.express as px
 
 
@@ -69,6 +67,7 @@ def display():
     def submit():
         # check valid player
         player = search_player.get()
+        players_added.append(player)
         labels = getLabels(df)
 
         if player in labels:
@@ -161,16 +160,20 @@ def display():
         return(squad, default)
 
     def submitTeam():
-        # clear transfer suggestion box
-        transfer_list_box.delete(0, END)
-        squad, default = getSquad()
-        # check for alike items in lists
-        result = set(squad).intersection(default)
-        isEmpty = (result == set())
-        if isEmpty:
-            transfers = t.suggestTransfer(squad, transfer.get())
-            for i in range(len(transfers)):
-                transfer_list_box.insert(END, transfers[i])
+        bank = budget_entry.get()
+        # check budget is numeric and has a value
+        if bank != "" and bank.isnumeric() == True:
+            # clear transfer suggestion box
+            transfer_list_box.delete(0, END)
+            squad, default = getSquad()
+            # check for alike items in lists
+            result = set(squad).intersection(default)
+            isEmpty = (result == set())
+            if isEmpty:
+                transfers = t.suggestTransfer(
+                    squad, transfer.get(), int(float(bank)))
+                for i in range(len(transfers)):
+                    transfer_list_box.insert(END, transfers[i])
 
     # graph stats
     def graphData():
@@ -181,12 +184,76 @@ def display():
                      color='name', title='Stats')
         fig.show()
 
+    # undo action
+    def undo():
+        if players_added != []:
+            player_to_remove = players_added[-1]
+            if gk1.cget("text") == player_to_remove:
+                gk1.config(text="GK")
+            if gk2.cget("text") == player_to_remove:
+                gk2.config(text="GK")
+            if def1.cget("text") == player_to_remove:
+                def1.config(text="Def")
+            if def2.cget("text") == player_to_remove:
+                def2.config(text="Def")
+            if def3.cget("text") == player_to_remove:
+                def3.config(text="Def")
+            if def4.cget("text") == player_to_remove:
+                def4.config(text="Def")
+            if def5.cget("text") == player_to_remove:
+                def5.config(text="Def")
+            if mid1.cget("text") == player_to_remove:
+                mid1.config(text="Mid")
+            if mid2.cget("text") == player_to_remove:
+                mid2.config(text="Mid")
+            if mid3.cget("text") == player_to_remove:
+                mid3.config(text="Mid")
+            if mid4.cget("text") == player_to_remove:
+                mid4.config(text="Mid")
+            if mid5.cget("text") == player_to_remove:
+                mid5.config(text="Mid")
+            if fw1.cget("text") == player_to_remove:
+                fw1.config(text="FW")
+            if fw2.cget("text") == player_to_remove:
+                fw2.config(text="FW")
+            if fw2.cget("text") == player_to_remove:
+                fw2.config(text="FW")
+            players_added.pop()
+            labels = getLabels(df)
+            update(labels)
+
+    def increase():
+        # get current value
+        bank_value = budget_entry.cget("text")
+        # convert to float
+        bank_value = float(bank_value)
+        # increase value by 0.1
+        bank_value += 0.1
+        # prevent recurring floats
+        bank_value = "{:.1f}".format(bank_value)
+        # return new value
+        budget_entry.config(text=bank_value)
+
+    def decrease():
+        if float(budget_entry.cget("text")) != 0.0:
+            # get current value
+            bank_value = budget_entry.cget("text")
+            # convert to float
+            bank_value = float(bank_value)
+            # increase value by 0.1
+            bank_value -= 0.1
+            # prevent recurring floats
+            bank_value = "{:.1f}".format(bank_value)
+            # return new value
+            budget_entry.config(text=bank_value)
+
     # GUI
     # init
     root = Tk()
     root.title('FPL analysis')
     root.config(bg='#B3D89C')
     root.geometry("1000x800")
+    players_added = []
 
     # label
     search_label = Label(root, text="FPL Transfer Suggester",
@@ -249,12 +316,26 @@ def display():
                           bg='#77A6B6', font=("Inter", 10))
     search_player.place(relx=0.5, rely=0.1, anchor=CENTER)
 
+    # budget label
+    budget_entry = Label(root, width=10, text='0', fg='#FFFFFF',
+                         bg='#77A6B6', font=("Inter", 10))
+    budget_entry.place(relx=0.8, rely=.22, anchor=CENTER)
+
+    # increment buttons
+    increase_button = Button(root, width=1, text='+', fg='#FFFFFF',
+                             bg='#84A6B1', font=("Inter", 10), command=increase)
+    increase_button.place(relx=0.89, rely=.22, anchor=CENTER)
+
+    decrease_button = Button(root, width=1, text='-', fg='#FFFFFF',
+                             bg='#84A6B1', font=("Inter", 10), command=decrease)
+    decrease_button.place(relx=0.86, rely=.22, anchor=CENTER)
+
     # free transfers input
     transfer = IntVar()
     transferBox = Checkbutton(
         root, text='Multi Transfer', font=("Inter", 10), variable=transfer, onvalue=1, offvalue=0, activebackground='#4D7298', selectcolor='#4D7298', fg='#FFFFFF')
     transferBox.config(bg='#4D7298')
-    transferBox.place(relx=0.8, rely=0.3, anchor=CENTER)
+    transferBox.place(relx=0.8, rely=0.29, anchor=CENTER)
 
     # list box
     player_search_list = Listbox(
@@ -317,7 +398,13 @@ def display():
                    bg='#4D7298', font=("Inter", 10), command=graphData)
     graph.place(relx=.10, rely=.70, anchor=CENTER)
 
+    # remove last action
+    undo_button = Button(root, width=6, text="Undo", fg='#FFFFFF',
+                         bg='#4D7298', font=("Inter", 10), command=undo)
+    undo_button.place(relx=.8, rely=.15, anchor=CENTER)
+
     root.mainloop()
 
 
-display()
+if __name__ == '__main__':
+    display()

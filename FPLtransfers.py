@@ -2,10 +2,6 @@
 import FPLCompleteData as data
 import pandas as pd
 
-# test data
-startingXI = ['Robert Sánchez', 'Aaron Ramsdale', 'Trent Alexander-Arnold', 'João Pedro Cavaco Cancelo', 'Marc Guéhi', 'Reece James', 'Tino Livramento',
-              'Mohamed Salah', 'Diogo Jota', 'Bernardo Mota Veiga de Carvalho e Silva', 'Lucas Rodrigues Moura da Silva', 'Conor Gallagher', 'Neal Maupay', 'Emmanuel Dennis', 'Christian Benteke']
-
 
 def getSingleTransfer(squad_df, pos_df, invalid_teams, name, price, pick, team):
     for buy_name, buy_price, buy_pick, buy_team in zip(pos_df['name'], pos_df['now_cost'], pos_df['pick_rank'], pos_df['team']):
@@ -57,6 +53,7 @@ def getMultipleTransfers(squad_df, df, invalid_teams, p1_name, p1_position, p1_r
                     buy_p2_team = pos_df.iloc[i]['team']
                     if not(buy_p1_name in squad_df['name'].unique()) and (not(buy_p2_team in invalid_teams) or (buy_p2_team == (p1_team or p2_team) and not(buy_p1_team))):
                         buy_p2_price = pos_df.iloc[i]['now_cost']
+                        print(buy_p1_price)
                         buy_p2_rank = pos_df.iloc[i]['pick_rank']
                         buy_cost = int(buy_p1_price) + int(buy_p2_price)
                         buy_pick = int(buy_p1_rank) + int(buy_p2_rank)
@@ -93,10 +90,11 @@ def getMultipleTransfers(squad_df, df, invalid_teams, p1_name, p1_position, p1_r
                             transfer = ('(%s) & (%s) -> (%s) & (%s)' %
                                         (p1_name, p2_name, buy_p1_name, buy_p2_name))
                             return(transfer)
+        # no suitable transfer found
         return('None')
 
 
-def suggestTransfer(squad, notransfers):
+def suggestTransfer(squad, notransfers, bank):
     df = data.getPlayerData()
     # get data for the squad
     squad_df = df.loc[df['name'].isin(squad)]
@@ -116,7 +114,7 @@ def suggestTransfer(squad, notransfers):
             pos_df = df[df['position'] == position].sort_values(
                 by='pick_rank', ascending=True)
             transfers.append(getSingleTransfer(
-                squad_df, pos_df, invalid_teams, name, price, pick, team))
+                squad_df, pos_df, invalid_teams, name, (price+bank), pick, team))
     else:
         for p1_name, p1_team, p1_position, p1_price, p1_rank in zip(players_out_df['name'], players_out_df['team'], players_out_df['position'], players_out_df['now_cost'], players_out_df['pick_rank']):
             # remove player
@@ -124,5 +122,5 @@ def suggestTransfer(squad, notransfers):
             for p2_name, p2_team, p2_position, p2_price, p2_rank in zip(players_out_df['name'], players_out_df['team'], players_out_df['position'], players_out_df['now_cost'], players_out_df['pick_rank']):
                 budget = int(p1_price) + int(p2_price)
                 transfers.append(getMultipleTransfers(squad_df, df, invalid_teams, p1_name,
-                                 p1_position, p1_rank, p1_team, p2_name, p2_position, p2_rank, p2_team, budget))
+                                 p1_position, p1_rank, p1_team, p2_name, p2_position, p2_rank, p2_team, (budget+bank)))
     return(transfers)
