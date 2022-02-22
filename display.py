@@ -1,11 +1,11 @@
 # imports
 from tkinter import *
+from tkinter import messagebox
 
-from matplotlib import backend_managers
+import plotly.express as px
+
 import FPLCompleteData as fpl
 import FPLtransfers as t
-from tkinter import *
-import plotly.express as px
 
 
 def display():
@@ -18,7 +18,6 @@ def display():
               mid1, mid2, mid3, mid4, mid5, fw1, fw2, fw3]
         for i in range(15):
             invalid_players.append(XI[i].cget("text"))
-
         if gk1.cget("text") != "GK" and gk2.cget("text") != "GK":
             df = df[df["position"].str.contains("Goalkeeper") == False]
         if def1.cget("text") != "Def" and def2.cget("text") != "Def" and def3.cget("text") != "Def" and def4.cget("text") != "Def" and def5.cget("text") != "Def":
@@ -36,7 +35,6 @@ def display():
         return labels
 
     # update listbox
-
     def update(data):
         # clear list box
         player_search_list.delete(0, END)
@@ -63,7 +61,6 @@ def display():
         update(data)
 
     # submit player choice
-
     def submit():
         # check valid player
         player = search_player.get()
@@ -71,10 +68,6 @@ def display():
         labels = getLabels(df)
 
         if player in labels:
-            # for name, position in zip(players['name'], players['position']):
-            #     if name == player:
-            #         player_position = position
-            #         break
             player_position = df.loc[df['name']
                                      == player, 'position'].item()
             if player_position == "Goalkeeper":
@@ -111,9 +104,15 @@ def display():
                     fw2.config(text=player)
                 else:
                     fw3.config(text=player)
+            # update list box
             labels = getLabels(df)
             update(labels)
+            # clear entry box
             search_player.delete(0, END)
+        else:
+            # tell the user to enter a vlaid palyer name
+            messagebox.showerror(
+                'Player Entry Error', 'Error: Please enter a valid name from the box below!')
 
     def clearLabels():
         gk1.config(text="GK")
@@ -160,33 +159,44 @@ def display():
         return(squad, default)
 
     def submitTeam():
-        bank = budget_entry.get()
-        # check budget is numeric and has a value
-        if bank != "" and bank.isnumeric() == True:
-            # clear transfer suggestion box
-            transfer_list_box.delete(0, END)
-            squad, default = getSquad()
-            # check for alike items in lists
-            result = set(squad).intersection(default)
-            isEmpty = (result == set())
-            if isEmpty:
-                transfers = t.suggestTransfer(
-                    squad, transfer.get(), int(float(bank)))
-                for i in range(len(transfers)):
-                    transfer_list_box.insert(END, transfers[i])
+        bank = budget_entry.cget("text")
+        # clear transfer suggestion box
+        transfer_list_box.delete(0, END)
+        squad, default = getSquad()
+        # check for alike items in lists
+        result = set(squad).intersection(default)
+        isEmpty = (result == set())
+        if isEmpty:
+            transfers = t.suggestTransfer(
+                squad, transfer.get(), int(float(bank)))
+            for i in range(len(transfers)):
+                transfer_list_box.insert(END, transfers[i])
+        else:
+            messagebox.showerror('Team Submisson Error',
+                                 'Error: Please submit a full team!')
 
     # graph stats
     def graphData():
+        # get squad
         squad, not_used = getSquad()
-        squad_df = df.loc[df['name'].isin(squad)]
-        team_data = squad_df[['name', selected_stat.get()]]
-        fig = px.bar(team_data, x='name', y=selected_stat.get(),
-                     color='name', title='Stats')
-        fig.show()
+        # check there is a complete squad
+        if not(("GK" or "Def" or "Mid" or "Fw") in squad):
+            # get a dataframe for players in the squad
+            squad_df = df.loc[df['name'].isin(squad)]
+            # get the column data for the chosen stat
+            team_data = squad_df[['name', selected_stat.get()]]
+            # plot the data
+            fig = px.bar(team_data, x='name', y=selected_stat.get(),
+                         color='name', title='Stats')
+            fig.show()
+        else:
+            messagebox.showerror('Team Error', 'Error: Team is incomplete')
 
     # undo action
     def undo():
+        # check if players have been added
         if players_added != []:
+            # go to the last player in the list
             player_to_remove = players_added[-1]
             if gk1.cget("text") == player_to_remove:
                 gk1.config(text="GK")
@@ -218,9 +228,14 @@ def display():
                 fw2.config(text="FW")
             if fw2.cget("text") == player_to_remove:
                 fw2.config(text="FW")
+            # remove player from the list of players in the team
             players_added.pop()
+            # update the players list box
             labels = getLabels(df)
             update(labels)
+        else:
+            # tell the user that the team is empty
+            messagebox.showerror('Undo Error', 'Team is empty')
 
     def increase():
         # get current value
@@ -235,7 +250,7 @@ def display():
         budget_entry.config(text=bank_value)
 
     def decrease():
-        if float(budget_entry.cget("text")) != 0.0:
+        if float(budget_entry.cget("text")) > 0.0:
             # get current value
             bank_value = budget_entry.cget("text")
             # convert to float
@@ -246,7 +261,8 @@ def display():
             bank_value = "{:.1f}".format(bank_value)
             # return new value
             budget_entry.config(text=bank_value)
-
+        else:
+            messagebox.showerror('Bank Error', "Bank can't be negative")
     # GUI
     # init
     root = Tk()
@@ -255,10 +271,10 @@ def display():
     root.geometry("1000x800")
     players_added = []
 
-    # label
-    search_label = Label(root, text="FPL Transfer Suggester",
-                         fg='#4D7298', bg='#B3D89C', font=("Inter", 25))
-    search_label.place(relx=.5, rely=0.05, anchor=CENTER)
+    # title label
+    title_label = Label(root, text="FPL Transfer Suggester",
+                        fg='#4D7298', bg='#B3D89C', font=("Inter", 25))
+    title_label.place(relx=.5, rely=0.05, anchor=CENTER)
 
     # starting XI labels
     # GKs
